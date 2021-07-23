@@ -1,0 +1,92 @@
+% This file is under CC0 public domain
+% See: https://creativecommons.org/publicdomain/zero/1.0/
+
+\ProvidesPackage{literatelistings}[2021-07-23 0.1.0]
+
+\usepackage{luacode}
+\usepackage{listings}
+
+\begin{luacode*}
+if not literatelistings_file_initialized then
+  literatelistings_file_initialized = {}
+end
+
+do
+  local mytext = ''
+  local myverb = {}
+  local mypath = nil
+  local myopt = ''
+
+  function literatelistings_write_to_file(path, content)
+    if literatelistings_file_initialized[path] then
+      local h = io.open(path, 'a+')
+      h:write(content)
+      io.close(h)
+    else
+      literatelistings_file_initialized[path] = true
+      local h = io.open(path, 'w+')
+      h:write(content)
+      io.close(h)
+    end
+  end
+
+  function literatelistings_readbuf(ending)
+    return function(buf)
+      if buf:match(ending) then
+        return buf
+      else
+        mytext = mytext .. buf .. "\n"
+        table.insert(myverb, buf)
+        return ''
+      end
+    end
+  end
+
+  function literatelistings_litnolisting_startrecording(path)
+    mypath = path
+    myopt = ''
+    luatexbase.add_to_callback('process_input_buffer', literatelistings_readbuf("\\end{litnolisting}"), 'readbuf')
+  end
+
+  function literatelistings_litnolisting_stoprecording()
+    local path = mypath
+    luatexbase.remove_from_callback('process_input_buffer', 'readbuf')
+    literatelistings_write_to_file(path, mytext)
+    mypath = nil
+    mytext=''
+    myverb = {}
+  end
+
+  function literatelistings_litlisting_startrecording(path, opt)
+    mypath = path
+    myopt = opt
+    luatexbase.add_to_callback('process_input_buffer', literatelistings_readbuf("\\end{litlisting}"), 'readbuf')
+  end
+
+  function literatelistings_litlisting_stoprecording()
+    local path = mypath
+    luatexbase.remove_from_callback('process_input_buffer', 'readbuf')
+    literatelistings_write_to_file(path, mytext)
+    tex.print("\\begin{lstlisting}[" .. myopt .. "]")
+    tex.print(myverb)
+    tex.print("\\end{lstlisting}")
+    tex.print("\n")
+    mypath = nil
+    mytext=''
+    myverb = {}
+  end
+end
+\end{luacode*}
+
+\newenvironment{litnolisting}[1]{%
+  \directlua{literatelistings_litnolisting_startrecording(\luastringN{#1})}
+}{%
+  \directlua{literatelistings_litnolisting_stoprecording()}
+}
+
+\newenvironment{litlisting}[2][]{%
+  \directlua{literatelistings_litlisting_startrecording(\luastringN{#2},\luastringN{#1})}
+}{%
+  \directlua{literatelistings_litlisting_stoprecording()}
+}
+

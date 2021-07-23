@@ -1,0 +1,32 @@
+= literatelistings
+
+== About
+literatelistings is a LuaLaTeX package for (restricted version of) literate programming.
+
+== Example
+
+[source, ]
+----
+\documentclass{article}
+\usepackage{literatelistings}
+\begin{document}
+
+% output a.c
+\begin{litnolisting}{a.c}
+#include <stdio.h>
+\end{litnolisting}
+
+% output a.c and rendered by lstlisting
+\begin{litlisting}[language=c]{a.c}
+int main()
+{
+  printf("Hello, world!\n");
+  return 0;
+}
+\end{litlisting}
+\end{document}
+----
+
+== License
+CC0 public domain
+
