@@ -5,7 +5,7 @@ literatelistings is a LuaLaTeX package for (restricted version of) literate prog
 
 == Example
 
-[source, ]
+[source, TeX]
 ----
 \documentclass{article}
 \usepackage{literatelistings}
